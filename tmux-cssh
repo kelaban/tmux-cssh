@@ -80,6 +80,11 @@ output() {
 	fi
 }
 
+#just print the session name with tmux ls format. see FORMATS in `man tmux`
+tmuxSessionNameExists() {
+  tmux ls -F '#S' 2> /dev/null | grep -q "^${TMUX_SESSION_NAME}$"
+}
+
 # Analyse given parameter into environment
 analyseParameters() {
 	# Walk through parameters
@@ -220,7 +225,7 @@ if [ "$FILENAME" != "" ]; then
 fi
 
 # Check if tmux-session is available
-if tmux ls 2> /dev/null | grep -q "${TMUX_SESSION_NAME}"; then
+if tmuxSessionNameExists; then
 	# Setup synchronizing panes
 	synchronizePanes ${SYNCHRONIZE_PANES} ${TMUX_SESSION_NAME}
 
@@ -292,7 +297,7 @@ for host in ${HOSTS}; do
 
     # If our initial ssh connection has failed, do not mark initTmuxCall as false since tmux will have aborted.
     # We'll need to try to start a new tmux session for the next host.
-    if tmux ls 2> /dev/null | grep -q "${TMUX_SESSION_NAME}"; then
+    if tmuxSessionNameExists; then
 		  initTmuxCall="false"
     fi
 	else
@@ -302,7 +307,7 @@ for host in ${HOSTS}; do
 done
 
 # If no session was able to start, say so and just exit.
-if ! tmux ls 2> /dev/null | grep -q "${TMUX_SESSION_NAME}"; then
+if ! tmuxSessionNameExists; then
   echo "All connections have failed."
   exit 1
 fi
